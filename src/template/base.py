@@ -28,5 +28,43 @@ class TemplateBase:
         handler.end_headers()
         # write html
         handler.wfile.write(
-            "<h1>Hello Man!!</h1>".encode()
+            """
+<html>
+<head>
+
+	<title>
+		Index - Anarchy
+	</title>
+
+	<style>
+		.w-100 {
+			width: 100%;
+		}
+
+		.bg-black {
+			background-color: #000;
+		}
+
+		.text-center {
+			text-align: center;
+		}
+
+		.text-white {
+			color: white;
+		}
+	</style>
+
+</head>
+<body class="bg-black">
+
+<div class="w-100 text-center">
+	<h1 class="text-white">
+		Hello Man!
+	</h1>
+	<img src="https://i.gifer.com/n8E.gif">
+</div>
+
+</body>
+</html>
+            """.encode()
         )
