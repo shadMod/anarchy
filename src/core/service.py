@@ -33,7 +33,7 @@ logger = logging.getLogger("anarchy_service")
 logger.handlers = [logging.StreamHandler()]
 
 
-def start_server_thread(mod, port: int):
+def start_server_thread(mod, port: int) -> httpserver.HTTPServer:
     """Start the CLI http server in another thread"""
     try:
         importlib.reload(httpserver)  # always reload the module
@@ -67,7 +67,7 @@ class AutoreloadHandler(PatternMatchingEventHandler):
         # start another thread to check if we need to reload
         threading.Thread(target=lambda: self.check_reload()).start()
 
-    def reload_modules(self):
+    def reload_modules(self) -> None:
         logging.debug("%s modules updated", len(self.needs_reload))
         for mname in self.needs_reload:
             logging.debug(mname)
@@ -75,23 +75,24 @@ class AutoreloadHandler(PatternMatchingEventHandler):
                 importlib.reload(sys.modules[mname])
         self.needs_reload.clear()
 
-    def check_reload(self):
+    def check_reload(self) -> None:
         while True:
             if self.needs_reload and time.time() - self.last_updated_at > 1:
-                logger.debug("Change detected, restarting CLI service...\n")
+                logger.debug("Change detected, restarting service...\n")
                 self.reload_modules()
                 self.server.stop()
-                new_server = start_server_thread(self.server.server_port)
+                mod = None
+                new_server = start_server_thread(mod, self.server.server_port)
                 if new_server:
                     self.server = new_server
             time.sleep(1)
 
-    def on_any_event(self, event):
+    def on_any_event(self, event) -> None:
         self.needs_reload.add(file_path_to_module_name(event.src_path))
         self.last_updated_at = time.time()
 
 
-def start_cli_service(mod=None, autoreload=True):
+def start_cli_service(mod=None, autoreload=True) -> (int, Observer):
     port, max_port = httpserver.PORT_RANGE
     while port < max_port and is_port_in_use(port):
         port += 1
@@ -100,15 +101,15 @@ def start_cli_service(mod=None, autoreload=True):
     observer = None
 
     if autoreload:
-        # start autoreload watcher in another thread
+        # start autoreload watcher
         observer = Observer()
         observer.schedule(
             AutoreloadHandler(
                 server=server,
                 patterns=["*.py"],
-                ignore_patterns=["__pycache__", "cli_service/app.py"],
+                ignore_patterns=["__pycache__"],
             ),
-            # monitor all "of.xxx" files
+            # monitor all files
             root_path,
             recursive=True,
         )
