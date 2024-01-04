@@ -41,15 +41,21 @@ class ServiceRequestHandler(BaseHTTPRequestHandler):
         if origin in ALLOWED_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
 
-    def send_json(self, obj: Any):
-        self.send_header("Content-Type", "application/json;charset=utf-8")
-        self.end_headers()
-        self.wfile.write(json.dumps(obj).encode("UTF-8", "replace"))
-
     def send_text(self, text: str, content_type: str = "text/plain"):
         self.send_header("Content-Type", f"{content_type};charset=utf-8")
         self.end_headers()
         self.wfile.write(text.encode("UTF-8", "replace"))
+
+    def send_bytes(self, text: bytes, content_type: str = "text/html"):
+        # self.send_response(STATUS_OK)
+        self.send_header("Content-type", content_type)
+        self.end_headers()
+        self.wfile.write(text)
+
+    def send_json(self, obj: dict, content_type: str = "application/json"):
+        self.send_header("Content-Type", f"{content_type};charset=utf-8")
+        self.end_headers()
+        self.wfile.write(json.dumps(obj).encode("UTF-8", "replace"))
 
     def send_error(self, code: int, message: str = None, explain: str = None):
         try:
@@ -68,17 +74,23 @@ class ServiceRequestHandler(BaseHTTPRequestHandler):
         self.send_cors_headers()
 
         mod = self.dict_router[self.path]
-        handler = mod and getattr(mod, "render_template", None)
-        if not handler:
-            return self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
+        render = mod().render_template
 
+        # handler = mod and getattr(mod, "render_template", None)
+        # if not handler:
+        #     return self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
+
+        if not render:
+            return self.send_error(HTTPStatus.METHOD_NOT_ALLOWED)
         self.send_response(HTTPStatus.ACCEPTED)
-        response = handler(self, self)
-        if response:
-            if isinstance(response, str):
-                self.send_text(response)
+
+        if render:
+            if isinstance(render, bytes):
+                self.send_bytes(render)
+            elif isinstance(render, str):
+                self.send_text(render)
             else:
-                self.send_json(response)
+                self.send_json(render)
 
     @property
     def dict_router(self):
@@ -109,7 +121,7 @@ class HTTPServer(ThreadingHTTPServer):
         super().__init__(("localhost", port), ServiceRequestHandler)
 
     def start(self):
-        logger.info(f"🚀 CLI service started at http://localhost:{self.server_port}")
+        logger.info(f"🚀 Service started at http://localhost:{self.server_port}")
         self.serve_forever()
 
     def stop(self):
