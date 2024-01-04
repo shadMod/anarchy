@@ -15,6 +15,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os.path
+
+from project.settings import TEMPLATE
 
 logger = logging.getLogger("anarchy_template")
 
@@ -22,49 +25,23 @@ STATUS_OK = 200  # get from constants
 
 
 class TemplateBase:
-    def render_template(self, handler):
-        handler.send_response(STATUS_OK)
-        handler.send_header("Content-type", "text/html")
-        handler.end_headers()
-        # write html
-        handler.wfile.write(
-            """
-<html>
-<head>
+    template_name = None
 
-	<title>
-		Index - Anarchy
-	</title>
+    def get_template_name(self) -> str:
+        return self.template_name
 
-	<style>
-		.w-100 {
-			width: 100%;
-		}
+    @property
+    def render_template(self) -> bytes:
+        # handler.send_response(STATUS_OK)
+        # handler.send_header("Content-type", "text/html")
+        # handler.end_headers()
+        # # write html
+        # handler.wfile.write(
+        #    "<h1>template</h1>"
+        # )
 
-		.bg-black {
-			background-color: #000;
-		}
+        if not self.get_template_name or isinstance(self.get_template_name, str):
+            raise Exception("No template_name")
 
-		.text-center {
-			text-align: center;
-		}
-
-		.text-white {
-			color: white;
-		}
-	</style>
-
-</head>
-<body class="bg-black">
-
-<div class="w-100 text-center">
-	<h1 class="text-white">
-		Hello Man!
-	</h1>
-	<img src="https://i.gifer.com/n8E.gif">
-</div>
-
-</body>
-</html>
-            """.encode()
-        )
+        with open(os.path.join(TEMPLATE, self.template_name), "rb") as fn:
+            return fn.read()
