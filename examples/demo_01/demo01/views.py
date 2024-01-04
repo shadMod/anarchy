@@ -1,0 +1,31 @@
+# Source code of Anarchy Framework
+# Copyright (C) 2023 shadMod <info@shadmod.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from datetime import datetime
+
+from src.template import TemplateBase
+
+
+class Index(TemplateBase):
+    template_name = "demo01/index.html"
+
+
+class DoTime(TemplateBase):
+    template_name = "demo01/do_time.html"
+
+
+class DoDate(TemplateBase):
+    template_name = "demo01/do_date.html"
